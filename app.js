@@ -1,10 +1,21 @@
-const express = require("express")
-const app = express()
+const express = require("express");
+const todoRoutes = require("./routes/todo.routes");
+const app = express();
+const mongodb = require("./mongodb/mongodb.connect");
+const { mongo } = require("mongoose");
+
+mongodb.connect();
+
+app.use(express.json());
+
+app.use("/todos", todoRoutes);
 
 app.get("/", (req, res) => {
-    res.send("express test")
-})
-
+  res.send("express test");
+});
+/*
 app.listen(3015, () => {
     console.log("server is running on http://localhost:3015");
 })
+*/
+module.exports = app;
