@@ -7,6 +7,7 @@ const { all } = require("../../app");
 
 TodoModel.create = jest.fn();
 TodoModel.find = jest.fn();
+TodoModel.findById = jest.fn();
 
 let req, res, next;
 beforeEach(() => {
@@ -60,11 +61,42 @@ decribe("TodoController.getTodos", () => {
     expect(res._isEndCalled()).toBeTruthy();
     expect(res._getJSONData()).toStrictEqual(allTodos);
   });
-  it("should handle errors", async () => {
+  it("should handle errors in getTodo", async () => {
     const errorMessage = { message: "Error finding" };
     const rejectedPromise = Promise.reject(errorMessage);
     TodoModel.find.mockReturnValue(rejectedPromise);
     await TodoController.getTodos(req, res, next);
     expect(next).toBeCalledWith(errorMessage);
+  });
+});
+
+describe("TodoController.getTodoById", () => {
+  it("should have getTodoById", () => {
+    expect(typeof TodoController.getTodosById).toBe("function");
+  });
+  it("should call TodoModel.findById with route paramaters", async () => {
+    req.params.todoIf = "8f3b2e1c7d9a864e2f0c4b57";
+    await TodoController.getTodoById(req, res, next);
+    expect(TodoModel.findById).toBeCalledWith("8f3b2e1c7d9a864e2f0c4b57");
+  });
+  it("should return json body and response code 200", async () => {
+    TodoModel.findById.mockReturnValue(newTodo);
+    await TodoController.getTodoById(req, res, next);
+    expect(res.statusCode).toBe(200);
+    expect(res._getJSONData()).toStrictEqual(newTodo);
+    expect(res._isEndCalled()).toBeTruthy();
+  });
+  it("should do error handling", async () => {
+    const errorMessage = { message: "error finding todoModel" };
+    const rejectedPromise = Promise.reject(errorMessage);
+    TodoModel.findById.mockReturnValue(rejectedPromise);
+    await TodoController.getTodoById(req, res, next);
+    expect(next).toBeCalledWith(errorMessage);
+  });
+  it("should return 404 when item doesn't exist", async () => {
+    TodoModel.findById.mockReturnValue(null);
+    await TodoController.getTodoById(req, res, next);
+    expect(res.statusCode).toBe(404);
+    expect(res._isEndCalled()).toBeTruthy();
   });
 });
